@@ -3,6 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
 from cms.models import CMSPlugin
+import math
 
 
 GRID_CONFIG = {'COLUMNS': 24, 'TOTAL_WIDTH': 960, 'GUTTER': 20}
@@ -22,8 +23,32 @@ class Grid(CMSPlugin):
 
 
 class GridColumn(CMSPlugin):
-    size = models.CharField(_('size'), choices=DJANGOCMS_GRID_CHOICES, default='1', max_length=50)
+    size = models.CharField(_('size'), choices=DJANGOCMS_GRID_CHOICES, max_length=50, blank=True, null=True)
     custom_classes = models.CharField(_('custom classes'), max_length=200, blank=True)
 
+    @property
+    def actual_size(self):
+        """
+        The actual size is either the size value set in the model or a value calculated from the number
+        of columns and the grid size
+        """
+        if self.size is not None:
+            return self.size
+        grid = Grid.objects.get(cmsplugin_ptr=self.parent)
+        print "parent: %s" % grid
+        
+        filled_columns = 0
+        auto_columns = 0
+        for column in grid.cmsplugin_set.all():
+            size = column.gridcolumn.size
+            if size is not None:
+                filled_columns += int(size)
+            else:
+                auto_columns += 1
+        
+        free_columns = GRID_CONFIG['COLUMNS'] - filled_columns
+        calculated_size = math.floor(free_columns/auto_columns)
+        return int(calculated_size)
+
     def __unicode__(self):
-        return u"%s" % self.get_size_display()
+        return u"%s" % (self.get_size_display() if self.size is not None else _('automatic'))
