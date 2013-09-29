@@ -4,12 +4,12 @@ from django.conf import settings
 
 from cms.models import CMSPlugin
 import math
-
+from django.utils.translation import ugettext_lazy as _
 
 GRID_CONFIG = {'COLUMNS': 24, 'TOTAL_WIDTH': 960, 'GUTTER': 20}
 GRID_CONFIG.update(getattr(settings, 'DJANGOCMS_GRID_CONFIG', {}))
 
-DJANGOCMS_GRID_CHOICES = [
+DJANGOCMS_GRID_CHOICES = [(None, _('automatic'))] + [
     ('%s' % i, 'grid-%s' % i) for i in range(1, GRID_CONFIG['COLUMNS']+1)
 ]
 
@@ -34,7 +34,10 @@ class GridColumn(CMSPlugin):
         """
         if self.size is not None:
             return self.size
-        grid = Grid.objects.get(cmsplugin_ptr=self.parent)
+        try:
+            grid = Grid.objects.get(cmsplugin_ptr=self.parent)
+        except Grid.DoesNotExist:
+            return 1
         print "parent: %s" % grid
         
         filled_columns = 0
