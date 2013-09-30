@@ -25,8 +25,11 @@ class GridPlugin(CMSPluginBase):
 
     def save_model(self, request, obj, form, change):
         response = super(GridPlugin, self).save_model(request, obj, form, change)
+        size = form.cleaned_data['create_size']
+        if size == 'None':
+            size = None
         for x in xrange(int(form.cleaned_data['create'])):
-            col = GridColumn(parent=obj, placeholder=obj.placeholder, language=obj.language, size=form.cleaned_data['create_size'], position=CMSPlugin.objects.filter(parent=obj).count(), plugin_type=GridColumnPlugin.__name__)
+            col = GridColumn(parent=obj, placeholder=obj.placeholder, language=obj.language, size=size, position=CMSPlugin.objects.filter(parent=obj).count(), plugin_type=GridColumnPlugin.__name__)
             col.save()
         return response
 
