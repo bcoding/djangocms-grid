@@ -32,20 +32,27 @@ class GridColumn(CMSPlugin):
         The actual size is either the size value set in the model or a value calculated from the number
         of columns and the grid size
         """
+        if self.size == 'None':
+            return 1
         if self.size is not None:
-            return self.size
+            try:
+                return int(self.size)
+            except ValueError:
+                return 1
         try:
             grid = Grid.objects.get(cmsplugin_ptr=self.parent)
         except Grid.DoesNotExist:
             return 1
-        print "parent: %s" % grid
         
         filled_columns = 0
         auto_columns = 0
         for column in grid.cmsplugin_set.all():
             size = column.gridcolumn.size
             if size is not None:
-                filled_columns += int(size)
+                try:
+                    filled_columns += int(size)
+                except ValueError:
+                    pass
             else:
                 auto_columns += 1
         

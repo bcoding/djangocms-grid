@@ -2,7 +2,7 @@ from cms.plugin_pool import plugin_pool
 from cms.plugin_base import CMSPluginBase
 from djangocms_grid.models import Grid, GridColumn, GRID_CONFIG
 from django.utils.translation import ugettext_lazy as _
-from djangocms_grid.forms import GridPluginForm
+from djangocms_grid.forms import GridPluginForm, TEMPLATE_CHOICES_DATA
 from cms.models import CMSPlugin
 
 
@@ -25,6 +25,16 @@ class GridPlugin(CMSPluginBase):
 
     def save_model(self, request, obj, form, change):
         response = super(GridPlugin, self).save_model(request, obj, form, change)
+        try:
+            create_template = TEMPLATE_CHOICES_DATA[int(form.cleaned_data['create_template'])][0]
+            if create_template:
+                for size in create_template:
+                    col = GridColumn(parent=obj, placeholder=obj.placeholder, language=obj.language, size=int(size), position=CMSPlugin.objects.filter(parent=obj).count(), plugin_type=GridColumnPlugin.__name__)
+                    col.save()
+                return response
+        except KeyError:
+            pass
+    
         size = form.cleaned_data['create_size']
         if size == 'None':
             size = None
